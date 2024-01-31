@@ -1,0 +1,968 @@
+---
+title: "Public Opinion During the 2021 Canadian Federal Election: More Similarities than Differences"
+subtitle: "Visualizing Canada"
+author: "Brad Wood-MacLean"
+date: "December 11th, 2023"
+output: html_document
+---
+```{r setup, include=FALSE}
+library(haven)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
+theme_update(panel.border = element_rect(color = "black", fill = NA))
+# NOTE: often there is code for visualizations that is commented out, this is because (just as I say in the final product) some visualization were removed to enchance understanding and be ethical, as such their code remains, as evidence for this statement.
+```
+# Part I: Introduction 
+
+Canadian public opinion is increasingly more divided. *But is it really?* Recently, we have seen mass disruptions, people occupying Parliament Hill, and others in turn, becoming angered at the occupiers (Levesque, 2023). This study seeks to examine the apparent rise in polarization and extremism in Canada using the 2021 Canadian Election Study Data (Stephenson et al., 2022). 
+
+Across various factors, no large partisan differences in **feelings towards party leaders, policy positions, ideology,** and **geography** were found. By default, this may suggest that partisanship in and of itself is the root cause of the apparent polarization. Many scholars of Canadian democracy point to an Americanization of Canadian politics, where partisanship is an identity and drives polarization (Cochrane, 2015). This study apparently vindicates this theory. 
+
+This study will present a series of visualizations to highlight how Canadians are not as divided as media pundits believe. The visualizations are broken into five categories, each often theorized to be a driver of vote choice. First, this essay will present visualizations about vote choice to establish a baseline for analyzing the data. Second, this essay will visualize respondents' feelings about party leaders. Third, visualizations will depict the respondents' opinions on policy issues, highlighting the consensus. Fourth, this essay will examine ideology, showing that partisan and regional differences in ideology are less vast than we might think. Finally, this essay will combine actual election results with the survey data to look at regional differences in vote choice across the country, finding more similarities than differences.
+
+# Part II: Analytical and Civic Importance
+
+Notice the subtitle, "Analytic and *Civic* Importance." This study carries more than just academic importance; this study is of the utmost importance to our democracy. Trust in our institutions and satisfaction with democracy is at an apparent all-time low (Nadeau, 2001). By highlighting our political similarities instead of our differences, this analysis lays the groundwork for building compromise and saving our democracy from polarization. We cannot move forward denigrating our fellow citizens because they disagree with us. Likewise, we cannot tolerate massive political disruptions and occupations of Parliament Hill designed to cause uproar and unseat the duly elected government. Finding consensus is the key to moving forward and bringing empathy back to politics. This analysis shows that even at election time, when politics are front of mind, and disagreements are more pronounced, we have much in common, much of ourselves that we can see in each other, and much to agree on.
+
+Academically, this work contributes to ongoing scholarly debate about what influences vote choice in Canada by pointing out different correlations. Some scholars highlight leader evaluations as the primary driver of vote choice; that is to say, people do not evaluate the party and their proposed policies; instead, they make voting decisions based on evaluations of the leader's trustworthiness and likability (Kuklinski and Quirk, 2000). Other maintain policy preferences drive vote choice; that is to say, people select the party they vote for based on policies they support (Orr et al., 2023). Another camp holds that people vote based on ideological preferences, are rational actors, and select the party closest to their placement on an ideological spectrum. Finally, another group argues that partisanship drives people's votes. Party membership, both official and unofficial, has become a socio-psychological identity, and people express loyalty to it instead of evaluating things rationally to maximize self-interest (Dias and Lelkes, 2022).
+
+# Part III: Data Source and Ethical Issues
+
+The data comes from the 2021 Canadian Election Study (CES); the lead researcher is Laura B. Stephenson from the University of Western Ontario. The CES is an online survey done before and after the election. The survey draws respondents from all walks of life, from all provinces and across different demographics. We can be confident in the data based on the considerable sample size, efforts taken to ensure representativeness, and the academic impartiality held by its conductors (Stephenson et al., 2022).
+
+In addition to the CES data, this project will use data from the government of Canada to visualize actual election results. Specifically, it uses official government of Canada map data combined with election results from Elections Canada (Government of Canada, 2011; Government of Canada, 2022). 
+
+#### Measurement Strategy 
+
+The goal of the CES is to measure Canadian public opinion during election season. Citizens' opinions are measured by respondents' answers to survey questions. This could be rating feelings on a scale clearly explained to the respondent in the question description, or by asking them to select their level of agreement with a statement by selecting pre-designated response categories (Stephenson et al., 2022). The findings from the random sample are then used to generalize about all Canadians. 
+
+#### Ethical Issues 
+
+A major potential ethical issue concerns the data's ability to capture the opinions of marginalized communities, specifically northern and isolated communities with unreliable internet connections. The online nature of the survey means an internet connection is required, which means that those without an internet connection are excluded from the data. This can predominantly impact lower-income people and northern indigenous communities.
+
+Additionally, there are some issues about privacy and data usage. To help curtail this, the survey includes an understanding check to verify that respondents understand their data will be used in a publicly accessible manner, albeit anonymized (Stephenson et al., 2022). While the survey includes questions that could be used to identify specific respondents, such as postal codes, this would not be easy to do.
+
+As the analyst and visualizer, it is my responsibility to present the data in an unbiased way. While I explicitly state my goal is to highlight similarities and bridge divides, the realization that we were less divided than the media would have us believe came after preliminary analysis; it was not my intent at the onset of this endeavor. To that end, each visualization in this report uses a subset version of the CES data only when there is a large enough sample size to make the data reliable so as not to mislead the reader. At times territories and provinces with smaller populations are excluded to avoid making a generalization about the entire region when the sample size is too small to do so accurately.
+
+Furthermore, anyone who uses map data in visualizations confronts common issues. Maps on their own do not depict population and influence. For example in a map of Canada, Nunavut is huge, but its population and influence within the federation is minuscule. To minimize confusion like this, the geographic section of this paper includes both in-text disclaimers to remind readers of this as well visualizations of geographical data in non-map formats such as faceted pie charts and box plot series.
+
+# Part IV: Visualizations
+
+**Note: Some inter-related visualizations are contained in tabs, to interact simply click the various tabs above the figure to see the different visualization and accompanying descriptions.**
+
+```{r load data, include = FALSE}
+
+# ces <- read_dta("2021 Canadian Election Study v1.0.dta")
+# write.csv(ces, "2021CES2021.csv")
+
+ces <-read.csv("2021CES2021.csv")
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+ces <- ces %>% 
+  filter(!is.na(cps21_votechoice))
+
+ces <- ces %>% 
+  mutate(cps21_votechoice = recode(cps21_votechoice,
+         "1" = "Liberal",
+         "2" = "Conservative",
+         "3" = "NDP",
+         "4" = "Bloc",
+         "5" = "Green",
+         "6" = "PPC",
+         "7" = "Other",
+         "8" = "Don't know") )
+
+correct_colors <- c("Liberal" = "#E4002B", "Conservative" = "#0033A0", "NDP" = "#FF5800", "Bloc" = "#00AEEF", "Green" = "#3B9771", "PPC" =  "#800080", "Other" = "gray")
+
+ces <- ces %>% 
+  filter(!is.na(cps21_2nd_choice))
+
+ces <- ces %>% 
+  mutate(cps21_2nd_choice = recode(cps21_2nd_choice,
+         "1" = "Liberal",
+         "2" = "Conservative",
+         "3" = "NDP",
+         "4" = "Bloc",
+         "5" = "Green",
+         "6" = "PPC",
+         "7" = "Other",
+         "8" = "Don't know") )
+
+ces <- ces %>% 
+  filter(!is.na(cps21_lead_rating_23), cps21_lead_rating_23 != -99)
+
+ces <- ces %>% 
+  filter(!is.na(cps21_party_rating_23), cps21_party_rating_23 != -99)
+
+ces <- ces %>%
+  mutate(cps21_province = recode(cps21_province,
+    "1"  = "Alberta",
+    "2"  = "British Columbia",
+    "3"  = "Manitoba",
+    "4"  = "New Brunswick",
+    "5"  = "Newfoundland and Labrador",
+    "6"  = "Northwest Territories",
+    "7"  = "Nova Scotia",
+    "8"  = "Nunavut",
+    "9"  = "Ontario",
+    "10" = "Prince Edward Island",
+    "11" = "Quebec",
+    "12" = "Saskatchewan",
+    "13" = "Yukon"))
+
+```
+
+### Respondent's Vote Choice
+
+The most fundamental component of any election study is vote choice. Below is a visualization depicting the number of respondents from across all regions in the country, indicating which party they would vote for. The exact question from the survey was:
+
+*"Which party do you think you will vote for?"* (Stephenson et al., 2022)
+
+```{r vote choice, echo=FALSE}
+
+vote_choice_bargraph <- ggplot(ces, aes(x = cps21_votechoice, fill = cps21_votechoice)) +
+  geom_histogram(stat = 'count') +
+  scale_fill_manual(values = correct_colors) +
+  theme(legend.position = 'none', panel.border = element_rect(color = "black", fill = NA), panel.grid.major = element_blank()) +
+  xlab("Party") +
+  ylab("Number of Respondents")+
+  ggtitle("Intended Vote Choice") 
+
+print(vote_choice_bargraph)
+ggsave("figs/vote_choice_bargraph.png")
+```
+
+Here, we see some evidence testifying to the data's reliability. This is very close to the actual election results; the only significant difference is that the Conservatives won the popular vote, but only by a small margin; given all surveys have a margin of error, this makes sense.
+
+At first glance, the graphs show partisan divisions; while the Liberals have the most support, the Conservatives have virtually the same amount, and the NDP is not far behind. Moreover, PPC support levels are visible, indicating that they garner significant public support, given their very vocal anti-Trudeau rhetoric, all this combined points to high amounts of division. However, further examination will show how, despite the appearance of difference, we have much in common across party lines…
+
+### How This Translates into House of Commons Seats
+
+Canada uses a first-past-the-post system. However, in 2015, then-candidate and future Prime Minister Justin Trudeau promised to institute proportional representation, meaning that the proportion of a party's popular vote determines the number of seats in the House of Commons, but he backtracked on this. The below visualization may shed some light on that.
+
+```{r Parliament, echo=FALSE}
+#install.packages("ggparliament")
+library(ggparliament)
+
+#First step is to turn the data from voters into proportions then out of 338
+
+ces_votes <- ces %>% 
+  select(cps21_votechoice)
+
+ces_votes <- table(ces_votes)
+
+ces_votes <- prop.table(ces_votes)
+
+# Scale the proportions to match seats
+
+ces_votes <- as.data.frame(ces_votes)
+ces_votes$seats <- ces_votes$Freq*338
+ces_votes <-  ces_votes %>% 
+  select(cps21_votechoice, seats)
+
+#add government variable
+ces_votes$government <- 0
+ces_votes$government <- ifelse(ces_votes$cps21_votechoice %in% c("Liberal", "Bloc", "Other"), 1, 0)
+
+ces_votes$seats <- round(ces_votes$seats) #round to nearest whole number for seats
+
+can_parl <- parliament_data(
+  election_data = ces_votes,
+  type = "opposing_benches",
+  group = ces_votes$government,
+  parl_rows = 10,
+  party_seats = ces_votes$seats
+)
+
+
+# No black box
+parliament_plot_nobox <- ggplot(can_parl, aes(x, y, colour = cps21_votechoice)) +
+  geom_parliament_seats() +
+  scale_colour_manual(values = correct_colors, name = "Party") +  
+  theme_ggparliament() +
+  ggtitle("Hypothetical Parliament Based on Proportional Representation") +
+  theme(
+    plot.title = element_text(hjust = 0.5))
+
+print(parliament_plot_nobox)
+ggsave("figs/parliament_plot_nobox.png")
+```
+
+The above visualization uses the CES data on intended vote choice to extrapolate the composition of a hypothetical 338-seat parliament under proportional representation. Here, we see the Liberal seat count is reduced from its current number; perhaps this is why Justin Trudeau backtracked his promise of instituting proportional representation.
+
+In this hypothetical minority parliament, we see the Liberal's power reduced; the biggest obstacle to passing legislation would be negotiating with the significant "Other." "Other" is not a monolithic category like the parties; this is a compilation of independents and minor parties. As such, the power of an individual member is significantly increased. Also of note is the increased power of the NDP and PPC; the NDP has almost the same number of seats as the Liberals and Conservatives; this is because concentration in a region, something the NDP and PPC have historically lacked, is not needed under proportional representation. Inversely, the power of the Bloc Quebecois is reduced because concentration is not rewarded; since the BQ only operates in Quebec and not other provinces, their power is reduced in this parliament.
+
+### Examining Respondents' Second Choice of Party {.tabset}
+
+A way to gauge whether respondents understand the difference between parties is to see their second choice. Logically speaking, if respondents understand the difference between parties, then when presented with a situation where they cannot vote for their first choice, they should pick the party closest to their original choice on the political spectrum and/or the one with the most similar policies.
+
+Respondents were asked:
+
+*"And which party would be your second choice?"* (Stephenson et al., 2022)
+
+#### Bar graph
+
+```{r echo=FALSE}
+secondchoice_bargraph <- ggplot(ces, aes(x = cps21_votechoice, fill = cps21_2nd_choice)) +
+  geom_histogram(stat = 'count') +
+  scale_fill_manual(values = correct_colors) +
+  theme(panel.border = element_rect(color = "black", fill = NA), panel.grid.major = element_blank()) +
+  xlab("Actual Vote Choice") +
+  ylab("Number of Respondents")+
+  ggtitle("Actual Vote Choice and Second Vote Choice") +
+  labs(fill = "Second Choice")
+
+print(secondchoice_bargraph)
+ggsave("figs/secondchoice_bargraph.png")
+```
+
+What we see is exactly what we would expect, for the majority of respondents their second choice party is the party nearest to their first choice on the political spectrum:
+
+- Liberals tend towards NDP
+- NDP supporter tend towards the Liberal Party
+- Conservative supporter tend towards the PPC
+- PPC supporters tend towards the Conservative Party
+- Green supporters tend towards the NDP 
+
+While this is not always the case, it happens a significant amount of the time, thereby boding well when it comes to the electorate understanding the difference between the political parties. Additionally, the correlation between NDP and Liberal votes also makes sense, as the NDP have supported the Liberal Party on key policy issues, as such their partisans likely agree on many issue positions in addition to being ideologically similar, whereas Conservatives and Liberals/NDP supporters are not going to have as much to agree on.
+
+#### Sankey Diagram
+
+```{r sankey 2, echo=FALSE}
+library(ggalluvial)
+
+links <- ces |> 
+  group_by(cps21_votechoice, cps21_2nd_choice) |> 
+  summarize(freq = n())
+
+secondchoice_sankey_smalltext <- ggplot(links,
+       aes(axis1 = cps21_votechoice, axis2 = cps21_2nd_choice, y = freq)) +
+  geom_alluvium(aes(fill = cps21_votechoice)) +
+  geom_stratum(width = 1/5, fill = "white", color = "black") +  
+  geom_text(stat = "stratum", 
+            aes(label = after_stat(stratum)),
+            size = 3) +  # Adjust the size parameter to make labels smaller
+  scale_x_discrete(limits = c("P1", "P2"),
+                   expand = c(0, 0.05)) + 
+  theme_void() +
+  theme(legend.position = "none") +
+  scale_fill_manual(values = correct_colors) +
+  ggtitle("Actual Vote Choice and Second Vote Choice")
+
+print(secondchoice_sankey_smalltext)
+ggsave("figs/secondchoice_sankey_smalltext.png")
+```
+
+What we see is exactly what we would expect, for the majority of respondents their second choice party is the party nearest to their first choice on the political spectrum:
+
+- Liberals tend towards NDP
+- NDP supporter tend towards the Liberal Party
+- Conservative supporter tend towards the PPC
+- PPC supporters tend towards the Conservative Party
+- Green supporters tend towards the NDP 
+
+While this is not always the case, it happens a significant amount of the time, thereby boding well when it comes to the electorate understanding the difference between the political parties. Additionally, the correlation between NDP and Liberal votes also makes sense, as the NDP have supported the Liberal Party on key policy issues, as such their partisans likely agree on many issue positions in addition to being ideologically similar, whereas Conservatives and Liberals/NDP supporters are not going to have as much to agree on.
+
+### Feelings About Leaders
+
+As mentioned in the introduction, a hypothesized driver of vote choice is feelings toward party leaders. If people's opinions of parties inform their vote choice then there should be high correlation between feelings toward a party leader and feelings towards the leader's party. To measure feelings, respondents are asked to rate their feelings using a feeling thermometer where 0 is the worst possible feeling, and 100 is the best. Respondents used an interactive slider to report their feelings about leaders:
+
+*"How do you feel about the federal party leaders below? Set the slider to a number from 0 to 100, where 0 means you really dislike the leader and 100 means you really like the leader."* (Stephenson et al., 2022)
+
+```{r, echo=FALSE}
+ library(patchwork)
+# 
+# jthisto <- ggplot(ces, aes(x=cps21_lead_rating_23))+
+#   geom_histogram(bins=10) +
+#   labs(title = "Feelings about Justin Trudeau",
+#        y = "Count",
+#        x = "Feelings") +
+#   theme_minimal()
+# 
+# libhisto <- ggplot(ces, aes(x=cps21_party_rating_23))+
+#   geom_histogram(bins=10) +
+#   labs(title = "Feelings About The Liberal Party",
+#        y = "Count",
+#        x = "Feelings")+
+#   theme_minimal()
+# 
+# jt_lib_histo <- jthisto + libhisto 
+# jt_lib_histo
+
+```
+
+
+```{r JT unbrokendown feelings, echo=FALSE}
+# JT_Lib_noline <- ggplot(ces, aes(x=cps21_lead_rating_23, y = cps21_party_rating_23))+
+#   geom_point() +
+#   labs(title = "Feelings about Justin Trudeau and Feelings About the Liberal Party",
+#        y = "Liberal Party Feelings",
+#        x = "Justin Trudeau Feelings")
+# print(JT_Lib_noline)
+# ggsave("figs/JT_Lib_noline.png")
+
+```
+
+```{r Trudeau x Lib with lm, echo=FALSE}
+# ggplot(ces, aes(x=cps21_lead_rating_23, y = cps21_party_rating_23))+
+#   geom_point() +
+#   labs(title = "Feelings about Justin Trudeau and Feelings About the Liberal Party",
+#        y = "Liberal Party Feelings",
+#        x = "Justin Trudeau Feelings")+
+#   geom_smooth(method="lm")
+```
+
+```{r Trudeau x Lib with highlighted section, echo=FALSE}
+JT_Lib_with_line_text <- ggplot(ces, aes(x=cps21_lead_rating_23, y = cps21_party_rating_23))+
+  geom_point() +
+  labs(title = "Feelings about Justin Trudeau and Feelings About the Liberal Party",
+       y = "Liberal Party Feelings",
+       x = "Justin Trudeau Feelings")+
+  geom_smooth(method="lm")+
+  annotate(geom = "rect", xmin = -3, xmax = 12.5,
+             ymin = -3, ymax = 28, fill = "red", alpha = 0.2) + 
+   annotate(geom = "rect", xmax = 15, ymax = -2, fill = "white",
+            xmin = -1, ymin = -10  , hjust = 0)+
+    annotate(geom = "text", x = 0, y = -6,
+             label = "Lots of Hate", hjust = 0)+
+  annotate(geom = "rect", xmin = 50, xmax = 102,
+             ymin = 60, ymax = 102, fill = "red", alpha = 0.2) + 
+  annotate(geom = "rect", xmax = 100, ymax = 58, fill = "white",
+            xmin = 84, ymin = 49  , hjust = 0)+
+    annotate(geom = "text", x = 85, y = 54,
+             label = "Lots of Love", hjust = 0)
+
+print(JT_Lib_with_line_text)
+ggsave("figs/JT_Lib_with_line_text.png")
+
+```
+
+Here, we see a heavy correlation between feelings towards Justin Trudeau and the party he leads. The visualization indicates that, on average, an increase in feelings about Trudeau correlates with an increase in feelings about the Liberal Party. Of note are the highlighted clusters at the top and bottom, these clusters are part of the root cause of the polarization narrative. It is, therefore, necessary to determine who these respondents are. To that end, the below visualization depicts feelings about Justin Trudeau broken down by partisanship; we can see the original cluster of individuals at the top of the first graph who loved Trudeau are Liberal partisans and that, generally speaking, partisans from different parties dislike Trudeau. There is a substantial cluster at 0 for each party other than the Liberals, indicating widespread distaste for him.
+
+```{r, echo=FALSE}
+VoteChoice_JTFeelings <- ggplot(ces, aes(y = cps21_votechoice, x = cps21_lead_rating_23, color = cps21_votechoice)) +
+  geom_point() +
+  geom_jitter(alpha = 0.3) +
+  scale_color_manual(values = correct_colors) +
+  labs(y = "Vote Choice", x = "Feelings About Justin Trudeau", title = "Vote Choice and Feelings about Justin Trudeau") +
+  theme(legend.position = "none") 
+
+print(VoteChoice_JTFeelings)
+ggsave("figs/VoteChoice_JTFeelings.png")
+
+```
+
+The large clusters at 0 are worth examining more, to that end, visualizing this to see the density of party members who report disliking Trudeau shows us that the PPC has the highest proportion of supporters that strongly dislike Trudeau, followed by the Conservative Party; this makes sense as those parties are the ones furthest from the Liberal Party ideologically and politically speaking.
+
+```{r JT feelings Density, echo=FALSE}
+ces2 <- ces 
+ces2 <- ces2 %>% rename(Party = cps21_votechoice)
+ VoteChoice_JTFeelings_density <- ggplot(data = ces2, mapping = aes(x = cps21_lead_rating_23, fill = Party, color = Party)) +
+  geom_density(alpha = 0.3) +
+  labs(
+    title = "Vote Choice and Feelings About Justin Trudeau",
+    x = "Feelings",
+    y = "Density")+
+   scale_fill_manual(values = correct_colors) +
+  scale_color_manual(values = correct_colors)
+ 
+print(VoteChoice_JTFeelings_density)
+ggsave("figs/VoteChoice_JTFeelings_density.png")
+```
+
+It also makes sense that Liberal partisans have high feelings towards Trudeau, it would be illogical to support a party who's leader you do not agree with. Conservative and PPC dislike for Trudeau can likely be attributed to ideological and policy preference differences as those parties are the ones that theoretically differ from the Liberal party the most in those respects. The Bloc and NDP dislike for Trudeau is more interesting, as they are both theoretically left-leaning parties like the Liberal party.
+
+These visualizations raise an essential question: Does the trend of liking your own and hating others apply to other parties? The below visualization shows feelings towards each party leader broken down by the party respondents' support. Each dot represents respondents' feelings towards different leaders, and the horizontal bar they fall into depicts the party the respondent belongs to.
+
+```{r, echo=FALSE}
+# Vote Choice and Feelings about each leader
+# Pertinent leader feeling variables:
+# JT: cps21_lead_rating_23
+# EO: cps21_lead_rating_24
+# JS: cps21_lead_rating_25
+# Y-VB: cps21_lead_rating_26
+# AP: cps21_lead_rating_27
+# MB: cps21_lead_rating_29
+
+ces <- ces %>% 
+  filter(!is.na(cps21_lead_rating_24), cps21_lead_rating_24 != -99) 
+
+ces <- ces %>% 
+  filter(!is.na(cps21_lead_rating_25), cps21_lead_rating_25 != -99) 
+
+ces <- ces %>% 
+  filter(!is.na(cps21_lead_rating_26), cps21_lead_rating_26 != -99) 
+
+ces <- ces %>% 
+  filter(!is.na(cps21_lead_rating_27), cps21_lead_rating_27 != -99)
+
+ces <- ces %>% 
+  filter(!is.na(cps21_lead_rating_29), cps21_lead_rating_29 != -99) 
+
+leaderfeelings <- ces %>% 
+  summarize(cps21_votechoice, cps21_lead_rating_23, cps21_lead_rating_24, cps21_lead_rating_25, cps21_lead_rating_26, cps21_lead_rating_27, cps21_lead_rating_29)
+
+leaderfeelings <- leaderfeelings %>% 
+  rename(Trudeau_Feelings = cps21_lead_rating_23, 
+         OToole_Feelings = cps21_lead_rating_24,
+         Singh_Feelings = cps21_lead_rating_25,
+         Blanchet_Feelings = cps21_lead_rating_26,
+         Paul_Feelings = cps21_lead_rating_27,
+         Bernier_Feelings = cps21_lead_rating_29)
+
+leaderfeelings_filtered <- leaderfeelings %>%
+  filter(Trudeau_Feelings != -99,
+         OToole_Feelings != -99,
+         Singh_Feelings != -99,
+         Blanchet_Feelings != -99,
+         Paul_Feelings != -99,
+         Bernier_Feelings != -99)
+
+leader_colors <- c("Trudeau" = "#E4002B", "O'Toole" = "#0033A0", "Singh" = "#FF5800", "Blanchet" = "#00AEEF", "Paul" = "#3B9771", "Bernier" =  "#800080", "Other" = "gray")
+
+feelings_towards_leader_byVC <- ggplot(leaderfeelings_filtered, aes(x = cps21_votechoice, y = Trudeau_Feelings)) +
+  geom_jitter(aes(color = "Trudeau"), width = 0.2, size = 1) +
+  geom_jitter(aes(x = cps21_votechoice, y = OToole_Feelings, color = "O'Toole"), width = 0.2, size = 1) +
+  geom_jitter(aes(x = cps21_votechoice, y = Singh_Feelings, color = "Singh"), width = 0.2, size = 1) +
+  geom_jitter(aes(x = cps21_votechoice, y = Blanchet_Feelings, color = "Blanchet"), width = 0.2, size = 1) +
+  geom_jitter(aes(x = cps21_votechoice, y = Paul_Feelings, color = "Paul"), width = 0.2, size = 1) +
+  geom_jitter(aes(x = cps21_votechoice, y = Bernier_Feelings, color = "Bernier"), width = 0.2, size = 1) +
+  scale_color_manual(values = leader_colors) +
+  labs(x = "Vote Choice",
+    y = "Feelings",
+    title = "Feelings Towards Leader by Vote Choice",
+    color = "Leader" ) +
+  theme(legend.position = "top") +
+  coord_flip()
+
+print(feelings_towards_leader_byVC)
+ggsave("figs/feelings_towards_leader_byVC.png")
+```
+
+Generally speaking, the trend holds that partisans like their own party leader and dislike other party leaders. Notably, partisans from all parties dislike the PPC leader, Maxine Bernier. Interestingly, we see a pattern emerge where PPC supporters report 0 towards all leaders but their own, this suggest that a small minority of the population has very strong opinions.
+
+In sum, we see similarities across how respondents view party leaders:
+
+- Aside from Liberal partisans, there is widespread dislike of Prime Minister Trudeau 
+- Aside from PPC partisans, there is widespread dislike of Maxine Bernier 
+- People have positive views of their party leader 
+
+### Issue Positions {.tabset}
+
+As mentioned, many scholars point to issue positions as driving vote choice, so it is essential to analyze it here. The big takeaway is that issue divisions between partisans are less pronounced than one might think. We see cases of agreement where supporters of all parties trend towards the same response category and cases where all parties exhibit an even spread of supporters across all response categories. These two factors together suggest there is minimal division on issue positions across party lines. 
+
+```{r Carbon Tax by province, echo=FALSE}
+#Order
+Agree_Order <- c("Strongly Agree", "Somewhat Agree", "Neutral", "Somewhat Disagree", "Strongly Disagree", "Don't Know")
+
+#cps21_pos_carbon 
+ces <- ces %>%
+  mutate(cps21_pos_carbon = recode(cps21_pos_carbon,
+    "1"  = "Strongly Disagree",
+    "2"  = "Somewhat Disagree",
+    "3"  = "Neutral",
+    "4"  = "Somewhat Agree",
+    "5"  = "Strongly Agree",
+    "6"  = "Don't Know"))
+
+# ces_proportions <- ces %>%
+#   group_by(cps21_province, cps21_pos_carbon) %>%
+#   summarise(count = n()) %>%
+#   group_by(cps21_province) %>%
+#   mutate(proportion = count / sum(count))
+# 
+# ces_proportions <- na.omit(ces_proportions)
+# 
+# ggplot(ces_proportions, aes(x = factor(cps21_pos_carbon, levels = Agree_Order ), y = proportion, fill = cps21_pos_carbon)) +
+#   geom_bar(stat = "identity", fill = "grey") +
+#   facet_wrap(~cps21_province) +
+#   labs(
+#     title = "Carbon Tax Opinions by Province",
+#     x = "",
+#     y = "Proportion of Provinicial Population" ) +
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+#   theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+```
+
+#### Carbon Tax
+
+```{r Carbon Tax, echo=FALSE}
+ces <- ces %>%
+  mutate(cps21_pos_carbon = recode(cps21_pos_carbon,
+    "1"  = "Strongly Disagree",
+    "2"  = "Somewhat Disagree",
+    "3"  = "Neutral",
+    "4"  = "Somewhat Agree",
+    "5"  = "Strongly Agree",
+    "6"  = "Don't Know"))
+
+ces_proportions2 <- ces %>%
+  group_by(cps21_votechoice, cps21_pos_carbon) %>%
+  summarise(count = n()) %>%
+  group_by(cps21_votechoice) %>%
+  mutate(proportion = count / sum(count))
+
+ces_proportions2 <- na.omit(ces_proportions2)
+
+Carb_party <- ggplot(ces_proportions2, aes(x = factor(cps21_pos_carbon, levels = Agree_Order), y = proportion, fill = cps21_pos_carbon)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Carbon Tax Opinions by Party",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+print(Carb_party)
+ggsave("figs/Carb_party.png")
+```
+
+To measure opinions on the carbon tax the survey asked:
+
+*"To help reduce greenhouse gas emissions, the federal government should continue the carbon tax."* (Stephenson et al., 2022)
+
+Generally speaking, the above graph shows similarities across parties. Except for the PPC and the Greens, no party gravitates to a single response category. The PPC supporters gravitate to strongly disagreeing with the carbon tax, and the Greens gravitate to strongly agreeing. The Greens strongly agreeing makes sense, as their party's whole raison-d'etre is combating climate change, which is what the carbon tax does. While there are less pronounced trends, such as the Conservatives disagreeing and the Liberals agreeing, these are not by large margins. The near-perfect evenness across the "Other" category makes sense as this is a catch-all. Theoretically, the "Other" respondents should not have anything in common other than choosing to support a minor party or independent that can hail from any ideological predisposition.
+
+The high support among Liberal and NDP partisans makes sense as the policy was a Liberal Party policy passed with NDP support. Likewise the Conservative Party opposition to it makes sense as the party leaders have been vocal opponents of the policy, nevertheless it is interesting that despite the leader opposing the policy, many Conservative partisans report support for the policy. 
+
+#### Hate Speech
+
+```{r Hate Speech, echo=FALSE}
+#Order
+Agree_Order <- c("Strongly Agree", "Somewhat Agree", "Neutral", "Somewhat Disagree", "Strongly Disagree", "Don't Know")
+
+# pes21_hatespeech, is should illegal
+ces <- ces %>%
+  mutate(pes21_hatespeech = recode(pes21_hatespeech,
+    "1"  = "Strongly Disagree",
+    "2"  = "Somewhat Disagree",
+    "3"  = "Neutral",
+    "4"  = "Somewhat Agree",
+    "5"  = "Strongly Agree",
+    "6"  = "Don't Know"))
+
+ces_proportions3 <- ces %>%
+  group_by(cps21_votechoice, pes21_hatespeech) %>%
+  summarise(count = n()) %>%
+  group_by(cps21_votechoice) %>%
+  mutate(proportion = count / sum(count))
+
+ces_proportions3 <- na.omit(ces_proportions3)
+
+HateSpeech_Party <- ggplot(ces_proportions3, aes(x = factor(pes21_hatespeech, levels = Agree_Order), y = proportion, fill = pes21_hatespeech)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Hate Speech Opinions by Party",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+print(HateSpeech_Party)
+ggsave("figs/HateSpeech_Party.png")
+
+```
+
+To measure opinions about hate speech the survey asked:
+
+*"It should be illegal to say hateful things publicly about racial, ethnic and religious groups."* (Stephenson et al., 2022)
+
+With the exception of the PPC there is general agreement with this statement. Partisans from all parties gravitate toward agreeing and strongly agreeing with the statement. This implies broad consensus on this political issue. While the PPC may differ here by trending toward "strongly disagree" and "disagree" it is important to remember their share of the electorate shown in the very first visualization is quite low, meaning substantively, not many people actually strongly disagree with the statement. The large amount of Green supporters being neutral makes sense as the Green party is often thought of as a single-issue party (that issue being climate change), as this is not their issue, having no defined stance is logical.
+
+Substantively, this points to hate speech being a possible policy that parties can work together on as there is general support among partisans of all parties. The one party (aside from the PPC) that may have an issue with this is the Conservative Party, because they have the highest proportion of supporters who disagree with the statement to some extent.
+
+#### Immigration
+
+```{r Immigration, echo=FALSE}
+# pes21_fitin Too many recent immigrants just don't want to fit in to Canadian society.
+# Order for pes21_fitin
+Imm_Order <- c("Very Pro-Immigration", "Pro-Immigration", "Neutral", "Anti-Immigration", "Very Anti-Immigration", "Don't Know")
+
+ces <- ces %>%
+  mutate(pes21_fitin = recode(pes21_fitin,
+                               "1" = "Very Pro-Immigration",
+                               "2" = "Pro-Immigration",
+                               "3" = "Neutral",
+                               "4" = "Anti-Immigration",
+                               "5" = "Very Anti-Immigration",
+                               "6" = "Don't Know"))
+
+ces_proportions4 <- ces %>%
+  group_by(cps21_votechoice, pes21_fitin) %>%
+  summarise(count = n()) %>%
+  group_by(cps21_votechoice) %>%
+  mutate(proportion = count / sum(count))
+
+ces_proportions4 <- na.omit(ces_proportions4)
+
+Immigration_Party <- ggplot(ces_proportions4, aes(x = factor(pes21_fitin, levels = Imm_Order), y = proportion, fill = pes21_fitin)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Immigration Opinions by Party",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+print(Immigration_Party)
+ggsave("figs/Immigration_Party.png")
+
+```
+
+To measure opinions on immigration the survey asked:
+
+*"Too many recent immigrants just don't want to fit in to Canadian society."* (Stephenson et al., 2022)
+
+The response categories were re-coded in this visualization to improve understandably. 
+
+Aside from the Green Party and the PPC, opinions are essentially evenly divided across all parties, suggesting this issue may not be the most politically divisive. The large proportion of PPC supporters reporting very strong anti-immigration views makes sense given the ultra-conservative nature of the party and the tendency of ultra-conservatives to be xenophobic. Of note is the large amount of Green Party supporters holding anti-immigration views, this is interesting as it goes against their platform, perhaps people support the Green party solely out of a desire to combat climate change. Recall, these two parties have very little support overall so despite a high proportion of their partisans holding these views, it is a low proportion of the overall Canadian population. 
+
+#### Indigenous People 
+
+```{r Indigenous People, echo=FALSE}
+# pes21_ab_col Generations of colonialism and discrimination have created conditions that make it difficult for Aboriginal peoples to work their way out of the lower class.
+
+ces <- ces %>%
+  mutate(pes21_ab_col = recode(pes21_ab_col,
+    "1"  = "Strongly Disagree",
+    "2"  = "Somewhat Disagree",
+    "3"  = "Neutral",
+    "4"  = "Somewhat Agree",
+    "5"  = "Strongly Agree",
+    "6"  = "Don't Know"))
+
+ces_proportions5 <- ces %>%
+  group_by(cps21_votechoice, pes21_ab_col) %>%
+  summarise(count = n()) %>%
+  group_by(cps21_votechoice) %>%
+  mutate(proportion = count / sum(count))
+
+ces_proportions5 <- na.omit(ces_proportions5)
+
+Indigenous_face_discrimination_party <- ggplot(ces_proportions5, aes(x = factor(pes21_ab_col, levels = Agree_Order), y = proportion, fill = pes21_ab_col)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Belief that Indigenous People Face Discrimination",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+print(Indigenous_face_discrimination_party)
+ggsave("figs/Indigenous_face_discrimination_party.png")
+
+```
+
+To measure opinions about whether or not Indigenous people face discrimination the survey asked:
+
+*"Generations of colonialism and discrimination have created conditions that make it difficult for Aboriginal peoples to work their way out of the lower class."* (Stephenson et al., 2022)
+
+We see the Bloc, NDP, Liberals, and Greens mostly agreeing with the statement, but an almost even spread of respondents for the Conservative and PPC parties. This suggest there is some polarization here, but it is not as extreme as it could be since there is still a significant amount of respondents in the Conservative Party and PPC who agree and strongly agree with the statement. The "Other" category has a near even spread of respondents across response categories, this makes sense, as with other issues the "Other" category is not a monolithic group, but a collection of people who do not fit into other groups. 
+
+As with hate speech, Indigenous discrimination could be an excellent place to build policy without large scale disagreement. Given all major parties except for the Conservatives tend to agree Indigenous people face discrimination, and that many Conservatives do as well, this could be an ideal issue to build consensus on. 
+
+#### All
+
+```{r All, echo=FALSE, fig.width=12, fig.height=12}
+#install.packages("gridExtra")
+library(gridExtra)
+library(grid)
+carb_part <- ggplot(ces_proportions2, aes(x = factor(cps21_pos_carbon, levels = Agree_Order), y = proportion, fill = cps21_pos_carbon)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Carbon Tax Opinions by Party",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+hate_part <- ggplot(ces_proportions3, aes(x = factor(pes21_hatespeech, levels = Agree_Order), y = proportion, fill = pes21_hatespeech)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Hate Speech Opinions by Party",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+imm_part <- ggplot(ces_proportions4, aes(x = factor(pes21_fitin, levels = Imm_Order), y = proportion, fill = pes21_fitin)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Immigration Opinions by Party",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+ind_part <- ggplot(ces_proportions5, aes(x = factor(pes21_ab_col, levels = Agree_Order), y = proportion, fill = pes21_ab_col)) +
+  geom_bar(stat = "identity", fill = "grey") +
+  facet_wrap(~cps21_votechoice) +
+  labs(
+    title = "Belief that Indigenous People Face Discrimination",
+    x = "",
+    y = "Proportion of Party Voters" ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  theme(legend.position="none", panel.border = element_rect(color = "black", fill = NA))
+
+issue_part <- carb_part + hate_part + imm_part + ind_part
+all_issues_party <- issue_part + plot_annotation("Issue Positions By Partisanship", theme=theme(plot.title = element_text(hjust = 0.5, size = 18)))
+print(all_issues_party)
+ggsave("figs/all_issues_party.png")
+
+```
+
+### Ideology
+
+What if it isn't a specific issue that correlates with vote choice but ideology? 
+
+To measure this the survey asks respondents' to rate themselves on a 0 to 10 scale, 0 being far-left and 10 being the far-right.
+
+*"In politics, people sometimes talk of left and right... Using the same scale where 0 means the left and 10 means the right, where would you place yourself on this scale?"* (Stephenson et al., 2022)
+
+```{r Ideology and Vote Choice Correlation, echo=FALSE}
+
+ces <- ces[complete.cases(ces[,c("cps21_votechoice", "cps21_lr_scale_bef_1")]),]
+ces <- ces %>% 
+  filter(!is.na(cps21_lr_scale_bef_1), cps21_lr_scale_bef_1 != -99) 
+
+# Overal
+Ideology_VC <- ggplot(ces, aes(x = cps21_lr_scale_bef_1, y = cps21_votechoice)) +
+  geom_bin2d(binwidth = 1) +
+  scale_fill_continuous( low = "lightblue", high = "darkblue") +
+  labs(title = "Ideology and Vote Choice Correlation",
+       x = "Ideology",
+       y = "Vote Choice") +
+  theme(panel.background = element_rect(fill = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(color = "black", size = 1),
+       ) +
+  labs(fill = "Count")
+
+print(Ideology_VC)
+ggsave("figs/Ideology_VC.png")
+```
+
+This visualization depicts the concentration of each point on the ideological scale broken down by vote choice.
+
+There is nothing too surprising here. There is concentration around the center for the Liberal and Conservative parties; while the Liberals may be slightly left of the center, the Conservatives are just slightly to the right, this is exactly what we would expect given the ideological predispositions of the party platforms and leader rhetoric. **Importantly, there is no polarization on the ends.** Additionally, except for the PPC, the parties have a spectrum of support; there are far-left and far-right supporters for all the major parties. This could mean respondents did not understand the question, but a more optimistic person could read this as indicative of Canadian politics not polarizing to the ideological extremes. The lack of left-leaning support for the PPC makes sense as the party self-brands as a far right party.
+
+So, if there is no extreme ideological variation across the party, could there be ideological variation across the provinces?
+
+```{r Ideology and Province, echo=FALSE}
+# Ideology_Province<-ggplot(ces, aes(x = cps21_province, y = cps21_lr_scale_bef_1)) +
+#   stat_summary(
+#     geom = "point",
+#     fun = "mean",
+#     position = position_dodge(width = 0.5),
+#     color = "black",
+#     size = 3,
+#     alpha = 0.7) +
+#   stat_summary(
+#     geom = "linerange",
+#     fun.data = mean_sdl,
+#     position = position_dodge(width = 0.5),
+#     color = "black",
+#     size = 1.5) +
+#   labs(
+#     title = "Standard Deviation in Idoelogy by Province",
+#     x = "Province",
+#     y = "Ideology" ) +
+#   theme_minimal() +
+#   coord_flip()+
+#   theme(panel.border=element_rect(color="black", fill = NA, size=1))+
+#   scale_y_continuous(breaks = seq(0, 10, 1))
+# print(Ideology_Province)
+# ggsave("figs/Ideology_Province.png")
+```
+```{r Ideological Distribution Within Each Province, echo=FALSE}
+custom_order <- c("Newfoundland and Labrador","Prince Edward Island", "Nova Scotia", "New Brunswick", "Quebec","Ontario", "Manitoba","Saskatchewan","Alberta", "British Columbia",  "Nunavut")
+
+# Ideology_Province_boxplot <- ggplot(ces, aes(x = factor(cps21_province, levels = custom_order), y = cps21_lr_scale_bef_1)) +
+#   geom_boxplot(
+#     position = position_dodge(width = 0.8),  # Adjust width as needed
+#     color = "black",
+#     fill = "lightgray"  # You can customize the fill color
+#   ) +
+#   labs(
+#     title = "Ideological Distribution Within Each Province",
+#     x = "Province",
+#     y = "Ideology"
+#   ) +
+#   theme_minimal() +
+#   coord_flip() +
+#   theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) +
+#   scale_y_continuous(breaks = seq(0, 10, 1))
+# print(Ideology_Province_boxplot)
+# ggsave("figs/Ideology_Province_boxplot.png")
+```
+```{r Ideological Distribution Within Each Province Colored Based on Party Wins, echo=FALSE}
+Province_colors <- c("British Columbia" = "#E4002B", "Alberta" = "#0033A0", "Nunavut" = "#FF5800", "Saskatchewan" = "#0033A0", "Manitoba" = "#0033A0", "Ontario" = "#E4002B", "Quebec" = "#E4002B", "Newfoundland and Labrador" = "#E4002B", "New Brunswick" = "#E4002B", "Nova Scotia" = "#E4002B", "Prince Edward Island" = "#E4002B")
+
+# ggplot(ces, aes(x = factor(cps21_province, levels = custom_order), y = cps21_lr_scale_bef_1, fill = cps21_province)) +
+#   geom_boxplot(
+#     position = position_dodge(width = 0.8),
+#     color = "black"
+#   ) +
+#   scale_fill_manual(values = Province_colors) +
+#   labs(
+#     title = "Ideological Distribution Within Each Province",
+#     x = "Province",
+#     y = "Ideology"
+#   ) +
+#   theme_minimal() +
+#   coord_flip() +
+#   theme(panel.border = element_rect(color = "black", fill = NA, size = 1), legend.position = "none") +
+#   scale_y_continuous(breaks = seq(0, 10, 1))
+
+```
+```{r box plots with province vote choice, echo=FALSE}
+Ideology_Province_boxplot_partycolours <- ggplot(ces, aes(x = factor(cps21_province, levels = custom_order), y = cps21_lr_scale_bef_1, fill = cps21_province)) + #fill = should be winner not the province 
+  geom_boxplot(
+    position = position_dodge(width = 0.8),
+    color = "black") +
+  scale_fill_manual(
+    values = Province_colors,
+    breaks = c("British Columbia", "Alberta"),
+    labels = c("Liberal", "Conservative")) +
+  labs(
+    title = "Ideological Distribution Within Each Province",
+    x = "Province",
+    y = "Ideology",
+    fill = "Province Voted") +
+  theme_minimal() +
+  coord_flip() +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 1)) +
+  scale_y_continuous(breaks = seq(0, 10, 1)) +
+  theme(legend.position = "top")+
+    annotate(geom = "rect", xmin = 1, xmax = 3,
+             ymin = 8.5, ymax = 9.5, fill = "#E4002B", alpha = 0.2) + 
+   annotate(geom = "rect", xmin = 0.52, xmax = 2,
+             ymin = 4.5, ymax = 5.5, fill = "#E4002B", alpha = 0.2) 
+print(Ideology_Province_boxplot_partycolours)
+ggsave("figs/Ideology_Province_boxplot_partycolours.png")
+```
+
+This visualization depicts the ideological distribution across each province and which party won the most seats in the election for that province in order to capture the intersection between geography, ideology, and vote choice. The majority of provinces ideologically fall near the center of the spectrum; more than that, the long tails on the boxes indicate that each province has respondents across the entire political spectrum. 
+
+This means that, in practice, an individual from any place on the political spectrum will be able to find someone who agrees with them in nearly all the provinces. It is important to note the lack of tails on the Prince Edward Island and Newfoundland and Labrador boxes is due to the smaller relative sample size from those provinces. 
+
+### Geography 
+
+The important takeaway from this section is that there is support for all parties in all of Canada's regions.
+
+```{r Provincial Map, echo=FALSE}
+library(sf)
+prov_map <- read_sf("gpr_000b11a_e/gpr_000b11a_e.shp")
+
+prov_map <- prov_map %>%
+  rename(province = PRENAME)
+
+#unique(prov_map$province)
+
+Province_colors <- c("British Columbia" = "#E4002B", "Alberta" = "#0033A0", "Nunavut" = "#FF5800", "Saskatchewan" = "#0033A0", "Manitoba" = "#0033A0", "Ontario" = "#E4002B", "Quebec" = "#E4002B", "Newfoundland and Labrador" = "#E4002B", "New Brunswick" = "#E4002B", "Nova Scotia" = "#E4002B", "Prince Edward Island" = "#E4002B", "Yukon" = "#E4002B", "Northwest Territories" = "#E4002B")
+
+
+# My original code to calculate results based on original data would freeze when I compile the map, as such I am using the custom color vector and `scale_fill_manual` as a workaround after poking through the data to see how it should be, as working the calculations into the ggplot would not load. (no error message, I think its an issue with not being able to process and freezing/"not responding" before compiling the visualization )
+ggplot(prov_map, aes(fill = province)) +
+  geom_sf(color = "black", size = 0.5)+
+  scale_fill_manual(values = Province_colors, breaks = c("British Columbia", "Alberta", "Nunavut"), 
+                    labels = c("Liberal", "Conservative","NDP"))+
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    axis.text = element_blank(),  
+    axis.ticks = element_blank()) +
+  labs(title = "Party That Won the Most Seats in Each Province/Territory", fill = "Party")
+
+```
+
+This visualization employs data from the 2011 census to create a map of Canada, it combines it with actual election results from 2021 to show which party won the most seats in each province (Government of Canada, 2011; Government of Canada 2022).
+
+Having examined ideology across provinces, it is worth taking a closer look at how each province voted. Above are the actual election results; that is to say, the colouring on the map depicts which party won the most seats in each province. There are better ways to examine public opinion in the country than looking at the results in this way. Presenting provinces as monoliths can be misleading, not only because geographic size does not equate to population but also because this does not show how close each party's win was in each province. This can mean a situation where two parties won nearly the same amount of seats in each province, or it could mean that a party won more seats but they were seats with a smaller combined population than the seats won by the other party. To better show how support for each party breaks down within each province, see the next visualization. 
+
+```{r circle graphs, echo=FALSE}
+# Provinces to exclude
+provinces_to_exclude <- c("New Brunswick", "Newfoundland and Labrador", "Prince Edward Island")
+
+facet_exclude <- subset(ces, !(cps21_province %in% provinces_to_exclude))
+
+# Plotting code
+ggplot(facet_exclude, aes(x = "", fill = cps21_votechoice)) +
+  geom_bar(stat = "count", position = "fill", width = 1) +
+  annotate("text", x = 1, y = 1, label = "", vjust = 0.5, hjust = 0.5) +
+  coord_polar(theta = "y", start = 0) +
+  scale_fill_manual(values = correct_colors) +
+  labs(title = "Vote Choice in Each Province Based on Survey Respondents",
+       fill = "Party") +
+  theme_void() +
+  facet_wrap(~cps21_province)
+
+```
+
+Here, we see a more nuanced representation of geography's role in public opinion. Here, each pie chart depicts the proportion of survey respondents who said they would vote for each party within each province. This is after removing provinces with small sample sizes to ensure the visualization is not misleading. We can see where each party draws its support from. The Conservative Party has significant support in Alberta, the Liberals have lots of support in Ontario, and the NDP has significant support in Manitoba and Saskatchewan.
+
+Again, we see the impacts of the first-past-the-post system; although many provinces appear evenly divided, one party ultimately prevailed with the seat count. This visualization also adds nuance to the map above we can see that while provinces may have the most seats from one party overall, the citizens within each province are not voting monolithically. For instance, the map implies Alberta predominantly votes Conservative; here we see that only about half of survey respondents did. The map implies British Columbia supports the Liberals, but here we see that maybe a third of people do.
+
+The critical takeaway is that even though there are discernible trends that resonate with mainstream media reports, such as Alberta being more conservative, provinces are generally evenly split amongst support for parties. This implies that geography does not divide Canadians; provinces generally are comparable in their vote breakdowns according to the CES data.
+
+## Part V: Conclusion
+
+While these visualizations show there is much in common it is important to remember some caveats. First, this was an online survey, some people will be missed out, and it does not take logical gymnastics to assume people without internet have low income and may be members of traditionally marginalized communities. This means the visualizations and interpretations likely do not represent many people who fall into those groups. Additionally, this report only looked at some factors: **feelings towards party leaders, issue positions, ideology,** and **geography**, but there are many things that also influence vote choice: race, income, gender, etc., that were not included either in the survey or in this study of the CES data data. 
+
+In conclusion, data visualizations from analyzing the 2021 Canadian Election Study dataset revealed that Canadians are less divided than often portrayed. Only minimal differences exist when comparing **feelings towards party leaders, issue positions, ideology,** and **geography**. In a world increasingly becoming more divided where compromise seems next to impossible, these graphs can serve as a launching pad for dialogue showing that we as Canadians, as human beings, have more in common than we think.
+
+## Bibliography
+
+### Data: 
+
+Government of Canada. 2012. "Province and Territory Cartographic Boundary Files." 2011 Census Dataset. https://open.canada.ca/data/en/dataset/bab06e04-e6d0-41f1-a595-6cff4d71bedf/resource/d3e873d1-ee3c-4031-844e-6bcc0875db19
+
+Government of Canada. 2022. "43rd General Election: Official Voting Results." Open Government. https://open.canada.ca/data/en/dataset/199e5070-2fd5-49d3-aa21-aece08964d18
+
+Stephenson, Laurel B., Allison Harell, Daniel Rubenson, and Peter John Loewen. 2022. “2021 Canadian Election Study (CES).” Harvard Dataverse, V1. http://www.ces-eec.ca/2021-canadian-election-study/
+
+### Articles and Books:
+
+Cochrane, Christopher. 2015. *Left and Right*. Montreal: McGill-Queen’s University Press.
+
+Dias, Nicholas and Yphtach Lelkes. 2022. “The Nature of Affective Polarization: Disentangling Policy Disagreement from Partisan Identity.” *American Journal of Political Science* 66 no. 3. https://onlinelibrary.wiley.com/doi/abs/10.1111/ajps.12628
+
+Kuklinski, J. H., and Quirk, P. J. 2000. “Reconsidering the Rational Public: Cognition, Heuristics, and Mass Opinion.” In Lupia, A., McCubbins, M., and Popkin, S., eds. *Elements of Political Reason*. New York: Cambridge University Press. 
+
+Levesque, Catherine. Jan. 19 2023. "A year later, have the Conservatives embraced Freedom Convoy politics?" *The National Post*. https://nationalpost.com/news/politics/conservatives-detente-over-freedom-convoy-endures
+
+Nadeau, Richard. 2001. “Satisfaction with Democracy: The Canadian Paradox.” In *Value Change and Governance in Canada*. Toronto: University of Toronto Press.
+
+Orr, L. V., Anthony Fowler, and Gregory A. Huber. October 2023. “Is Affective Polarization Driven by Identity, Loyalty, or Substance?” *American Journal of Political Science* 67 no. 4. https://onlinelibrary.wiley.com/doi/10.1111/ajps.12796
+
+## Appendix
+
+### Appendix 1: A Note About Provinces 
+
+The survey question asking respondents to report which province they reside in was not explicitly written in the report because it is a not a question about political opinions and the wording of the question does not carry inherent political ramifications, to the same extent partisanship and ideological questions do. Nevertheless, the question was:
+
+*"In which province or territory are you currently living?"* (Stephenson et al., 2022)
+
+### Appendix 2: A Note on Measurment Strategy for Government of Canada Data 
+
+Since the map data and election results are self-explanatory, no elaboration is needed on measurement strategy. 
